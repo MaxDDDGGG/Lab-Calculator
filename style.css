@@ -1,0 +1,47 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+}
+.container {
+    max-width: 700px;
+    margin: auto;
+}
+h1 {
+    margin-bottom: 5px;
+}
+.subtitle {
+    color: #666;
+}
+.card {
+    background: white;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 10px;
+}
+label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+}
+textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 80px;
+    margin-top: 5px;
+    padding: 10px;
+    font-size: 16px;
+}
+button {
+    margin-top: 20px;
+    padding: 12px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+.hidden {
+    display: none;
+}
+#parameters {
+    line-height: 1.8;
+}
