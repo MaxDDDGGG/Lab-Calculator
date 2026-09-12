@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4PL Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="container">
+    <h1>4PL Calculator</h1>
+    <p class="subtitle">
+        Fit a four-parameter logistic curve to your laboratory data.
+    </p>
+    <section class="card">
+        <h2>Standard Curve</h2>
+        <p>
+            Enter concentration and response values separated by commas.
+        </p>
+        <label for="xValues">Concentration (X)</label>
+        <textarea id="xValues"
+            placeholder="0.1, 0.5, 1, 5, 10, 50"></textarea>
+        <label for="yValues">Response (Y)</label>
+        <textarea id="yValues"
+            placeholder="0.12, 0.25, 0.48, 0.72, 0.86, 0.95"></textarea>
+        <button onclick="calculate4PL()">
+            Calculate 4PL
+        </button>
+    </section>
+    <section id="results" class="card hidden">
+        <h2>Results</h2>
+        <div id="parameters"></div>
+        <canvas id="chart"></canvas>
+    </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
