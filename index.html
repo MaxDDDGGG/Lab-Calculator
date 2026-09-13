@@ -23,9 +23,24 @@
         <label for="yValues">Response (Y)</label>
         <textarea id="yValues"
             placeholder="0.12, 0.25, 0.48, 0.72, 0.86, 0.95"></textarea>
-        <button onclick="calculate4PL()">
-            Calculate 4PL
-        </button>
+<div class="button-row">
+
+    <button
+        id="calculateButton"
+        class="primary-button"
+        type="button">
+        Calculate 4PL
+    </button>
+
+
+    <button
+        id="clearButton"
+        class="secondary-button"
+        type="button">
+        Clear
+    </button>
+
+</div>
     </section>
     <section id="results" class="card hidden">
         <h2>Results</h2>
