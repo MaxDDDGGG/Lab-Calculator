@@ -115,6 +115,7 @@ function fit4PL(x, y) {
 // MAIN CALCULATION
 // ============================================================
 function calculate4PL() {
+    alert("Calculate button is working");
     try {
         const xText =
             document.getElementById("xValues").value;
