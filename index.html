@@ -12,36 +12,80 @@
     <p class="subtitle">
         Fit a four-parameter logistic curve to your laboratory data.
     </p>
-    <section class="card">
-        <h2>Standard Curve</h2>
-        <p>
-            Enter concentration and response values separated by commas.
-        </p>
-        <label for="xValues">Concentration (X)</label>
-        <textarea id="xValues"
-            placeholder="0.1, 0.5, 1, 5, 10, 50"></textarea>
-        <label for="yValues">Response (Y)</label>
-        <textarea id="yValues"
-            placeholder="0.12, 0.25, 0.48, 0.72, 0.86, 0.95"></textarea>
-<div class="button-row">
+<section class="card">
 
-    <button
-        id="calculateButton"
-        class="primary-button"
-        type="button">
-        Calculate 4PL
-    </button>
+    <h2>Standard Curve</h2>
+
+    <p>
+        Enter your concentration and response values.
+        Values can be separated by commas, spaces, tabs or new lines.
+    </p>
+
+    <div class="input-grid">
+
+        <div class="input-group">
+
+            <label for="xValues">
+                Concentration (X)
+            </label>
+
+            <textarea
+                id="xValues"
+                placeholder="0.1, 0.5, 1, 5, 10, 50"></textarea>
+
+            <span class="input-hint">
+                Concentration must be greater than 0.
+            </span>
+
+        </div>
 
 
-    <button
-        id="clearButton"
-        class="secondary-button"
-        type="button">
-        Clear
-    </button>
+        <div class="input-group">
 
-</div>
-    </section>
+            <label for="yValues">
+                Response (Y)
+            </label>
+
+            <textarea
+                id="yValues"
+                placeholder="0.12, 0.25, 0.48, 0.72, 0.86, 0.95"></textarea>
+
+            <span class="input-hint">
+                Enter the measured assay response.
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="button-row">
+
+        <button
+            id="calculateButton"
+            class="primary-button"
+            type="button">
+            Calculate 4PL
+        </button>
+
+        <button
+            id="exampleButton"
+            class="secondary-button"
+            type="button">
+            Load Example
+        </button>
+
+        <button
+            id="clearButton"
+            class="secondary-button"
+            type="button">
+            Clear
+        </button>
+
+    </div>
+
+</section>
+
     <section id="results" class="card hidden">
         <h2>Results</h2>
         <div id="parameters"></div>
