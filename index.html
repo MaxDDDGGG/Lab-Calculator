@@ -1,60 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>4PL Calculator</title>
-	<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Calculator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js" defer></script>
 </head>
 <body>
-	<main class="container">
-		<header>
-			<h1>4PL Calculator</h1>
-			<p class="subtitle">Fit a four-parameter logistic curve to your laboratory data.</p>
-		</header>
-		<section class="card">
-			<div class="section-header">
-				<div>
-					<h2>Standard Curve Data</h2>
-					<p class="section-description">Paste data directly from Excel or Google Sheets.</p>
-				</div>
-				<span class="paste-hint">Paste from Excel</span>
-			</div>
-			<div class="spreadsheet-wrapper">
-				<table id="dataTable" class="spreadsheet">
-					<thead>
-						<tr>
-							<th class="corner-cell"></th>
-							<th class="column-letter">A</th>
-							<th class="column-letter">B</th>
-						</tr>
-						<tr class="header-row">
-							<th class="row-number"></th>
-							<th>Concentration (X)</th>
-							<th>Response (Y)</th>
-						</tr>
-					</thead>
-					<tbody id="dataTableBody">
-					</tbody>
-				</table>
-			</div>
-			<div class="table-footer">
-				<span id="dataCount">0 data points</span>
-				<span>Tip: copy two columns from Excel and paste into any cell.</span>
-			</div>
-			<div id="inputError" class="input-error hidden"></div>
-			<div class="button-row">
-				<button id="calculateButton" class="primary-button">Calculate 4PL</button>
-				<button id="clearButton" class="secondary-button">Clear</button>
-			</div>
-
+    <main class="container">
+        <header>
+            <h1>Lab Calculator</h1>
+        </header>
+        <section class="card">
+            <div class="section-header">
+                <div>
+                    <h2>Standard Curve Data</h2>
+                    <p class="section-description">Paste data directly from Excel or Google Sheets.</p>
+                </div>
+            </div>
+            <div class="spreadsheet-wrapper">
+                <table id="dataTable" class="spreadsheet">
+                    <thead>
+                        <tr>
+                            <th class="corner-cell"></th>
+                            <th class="column-letter">A</th>
+                            <th class="column-letter">B</th>
+                        </tr>
+                        <tr class="header-row">
+                            <th class="row-number"></th>
+                            <th>Concentration (X)</th>
+                            <th>Response (Y)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+                <span id="dataCount">0 data points</span>
+                <span>Tip: Type or Paste directly from Excel or Google Sheets.</span>
+            </div>
+            <div id="inputError" class="input-error hidden"></div>
+            <div class="button-row">
+                <button id="calculateButton" class="primary-button">Draw</button>
+                <button id="clearButton" class="secondary-button">Clear</button>
+            </div>
+        </section>
+        
+        <section id="results" class="card hidden">
+            <div class="result-header">
+                <div>
+                    <span class="eyebrow">Analysis Complete</span>
+                    <h2>Results</h2>
+                </div>
+                <span id="pointCount" class="point-count">0 Points Fitted</span>
+            </div>
+            <div id="parameters"></div>
+            <div class="chart-container">
+                <canvas id="fitChart"></canvas>
+            </div>
+        </section>
+        
+        <section class="card">
             <div class="fit-options-row">
                 <label for="fitModel">Fit Model:
                     <select id="fitModel">
-                        <option value="4pl" selected>4PL (Symmetrical)</option>
-                        <option value="5pl">5PL (Asymmetrical)</option>
-                        <option value="linear">Linear (y = mx + c)</option>
-                        <option value="quadratic">Quadratic (y = ax² + bx + c)</option>
+                        <option value="4pl_unconstrained">4PL (Unconstrained)</option>
+                        <option value="4pl_constrained">4PL (Constrained)</option>
+                        <option value="5pl">5PL</option>
+                        <option value="linear">Linear</option>
+                        <option value="quadratic">Quadratic</option>
+                        <option value="cubic">Cubic</option>
+                        <option value="michaelisMenten">Michaelis-Menten</option>
+                        <option value="expGrowth">Exponential Growth</option>
+                        <option value="expDecay">Exponential Decay</option>
+                        <option value="gaussian">Gaussian</option>
                     </select>
                 </label>
                 <label for="weighting">Weighting:
@@ -62,26 +84,16 @@
                         <option value="none" selected>None (w = 1)</option>
                         <option value="invY">1 / Y</option>
                         <option value="invY2">1 / Y²</option>
+                        <option value="invX">1 / X</option>
                         <option value="invX2">1 / X²</option>
                     </select>
                 </label>
             </div>
-		</section>
+        </section>
 
-		<section id="results" class="card hidden">
-			<div class="result-header">
-				<div>
-					<span class="eyebrow">Analysis Complete</span>
-					<h2>Results</h2>
-				</div>
-				<span id="pointCount" class="point-count">0 Points Fitted</span>
-			</div>
-			<div id="parameters"></div>
-			<canvas id="chart"></canvas>
-		</section>
-	</main>
+    </main>
 
-	<script src="app.js"></script>
+    <script src="app.js"></script>
 
 </body>
 </html>
