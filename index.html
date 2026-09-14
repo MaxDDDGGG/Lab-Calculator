@@ -13,77 +13,55 @@
         Fit a four-parameter logistic curve to your laboratory data.
     </p>
 <section class="card">
-
-    <h2>Standard Curve</h2>
-
-    <p>
-        Enter your concentration and response values.
-        Values can be separated by commas, spaces, tabs or new lines.
-    </p>
-
-    <div class="input-grid">
-
-        <div class="input-group">
-
-            <label for="xValues">
-                Concentration (X)
-            </label>
-
-            <textarea
-                id="xValues"
-                placeholder="0.1, 0.5, 1, 5, 10, 50"></textarea>
-
-            <span class="input-hint">
-                Concentration must be greater than 0.
-            </span>
-
+    <div class="section-header">
+        <div>
+            <h2>Standard Curve Data</h2>
+            <p>
+                Paste your concentration and response data directly from
+                Excel or Google Sheets.
+            </p>
         </div>
-
-
-        <div class="input-group">
-
-            <label for="yValues">
-                Response (Y)
-            </label>
-
-            <textarea
-                id="yValues"
-                placeholder="0.12, 0.25, 0.48, 0.72, 0.86, 0.95"></textarea>
-
-            <span class="input-hint">
-                Enter the measured assay response.
-            </span>
-
-        </div>
-
     </div>
 
+    <label for="dataInput">Concentration (X) and Response (Y)</label>
 
-    <div class="button-row">
+    <textarea
+        id="dataInput"
+        class="data-input"
+        rows="10"
+        spellcheck="false"
+        placeholder="Concentration (X)&#9;Response (Y)"
+    ></textarea>
 
-        <button
-            id="calculateButton"
-            class="primary-button"
-            type="button">
-            Calculate 4PL
-        </button>
-
-        <button
-            id="exampleButton"
-            class="secondary-button"
-            type="button">
-            Load Example
-        </button>
-
-        <button
-            id="clearButton"
-            class="secondary-button"
-            type="button">
-            Clear
-        </button>
-
+    <div class="input-help">
+        <span>Paste two columns from Excel or Google Sheets.</span>
+        <span>Headers and blank rows are ignored.</span>
     </div>
 
+    <div id="dataPreview" class="data-preview hidden">
+        <div class="preview-header">
+            <h3>Data Preview</h3>
+            <span id="dataCount"></span>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Concentration (X)</th>
+                        <th>Response (Y)</th>
+                    </tr>
+                </thead>
+                <tbody id="dataPreviewBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="inputError" class="input-error hidden"></div>
+
+    <button id="calculateButton" type="button">
+        Calculate 4PL
+    </button>
 </section>
 
     <section id="results" class="card hidden">
