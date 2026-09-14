@@ -1,30 +1,41 @@
 let lastX = null, lastY = null, lastResult = null;
 
-function parseInputData() {
-	const inputElement = document.getElementById("dataInput");
-	if (!inputElement) throw new Error("Data input field could not be found.");
+// Initialize editable table rows
+function initSpreadsheet(rowCount = 8) {
+	const tbody = document.getElementById("dataTableBody");
+	if (!tbody) return;
+	tbody.innerHTML = "";
+	for (let i = 0; i < rowCount; i++) {
+		addSpreadsheetRow(tbody, i + 1);
+	}
+	updateDataCount();
+}
 
-	const input = inputElement.value.trim();
-	if (!input) throw new Error("Please paste your concentration and response data.");
+function addSpreadsheetRow(tbody, rowNum, xVal = "", yVal = "") {
+	const tr = document.createElement("tr");
+	tr.innerHTML = `
+		<td class="row-number">${rowNum}</td>
+		<td contenteditable="true" class="cell cell-x">${xVal}</td>
+		<td contenteditable="true" class="cell cell-y">${yVal}</td>
+	`;
+	tbody.appendChild(tr);
+}
 
+// Extract numeric data from editable table cells
+function parseSpreadsheetTable() {
+	const rows = document.querySelectorAll("#dataTableBody tr");
 	const xValues = [], yValues = [];
-	const rows = input.split(/\r?\n/);
 
-	rows.forEach((row, index) => {
-		const trimmedRow = row.trim();
-		if (!trimmedRow) return;
-
-		const columns = row.includes("\t") ? row.split("\t") : row.split(",");
-		if (columns.length < 2) throw new Error(`Row ${index + 1} does not contain two columns.`);
-
-		const xText = columns[0].trim();
-		const yText = columns[1].trim();
+	rows.forEach((tr, index) => {
+		const xText = tr.querySelector(".cell-x")?.textContent.trim();
+		const yText = tr.querySelector(".cell-y")?.textContent.trim();
 
 		if (!xText && !yText) return;
 
 		const x = Number(xText);
 		const y = Number(yText);
 
+		// Skip header rows if present
 		if (index === 0 && !Number.isFinite(x) && !Number.isFinite(y)) return;
 
 		if (!Number.isFinite(x)) throw new Error(`Invalid concentration on row ${index + 1}: "${xText}".`);
@@ -34,88 +45,88 @@ function parseInputData() {
 		yValues.push(y);
 	});
 
-	if (xValues.length < 4) throw new Error("At least four valid concentration/response pairs are required.");
-
+	if (xValues.length < 4) throw new Error("At least four valid data pairs are required.");
 	return { xValues, yValues };
 }
 
-function updateDataPreview() {
-	const preview = document.getElementById("dataPreview");
-	const tbody = document.getElementById("dataPreviewBody");
-	const count = document.getElementById("dataCount");
-	const error = document.getElementById("inputError");
-	const inputElement = document.getElementById("dataInput");
-
-	if (!preview || !tbody || !count || !error) return;
-
-	tbody.innerHTML = "";
-	error.textContent = "";
-	error.classList.add("hidden");
-
-	if (!inputElement || !inputElement.value.trim()) {
-		preview.classList.add("hidden");
-		return;
-	}
-
-	try {
-		const { xValues, yValues } = parseInputData();
-
-		xValues.forEach((x, i) => {
-			const row = document.createElement("tr");
-			const xCell = document.createElement("td");
-			const yCell = document.createElement("td");
-
-			xCell.textContent = formatNumber(x);
-			yCell.textContent = formatNumber(yValues[i]);
-
-			row.appendChild(xCell);
-			row.appendChild(yCell);
-			tbody.appendChild(row);
-		});
-
-		count.textContent = `${xValues.length} data point${xValues.length === 1 ? "" : "s"}`;
-		preview.classList.remove("hidden");
-	} catch (errorObject) {
-		preview.classList.add("hidden");
-		error.textContent = errorObject.message;
-		error.classList.remove("hidden");
-	}
+// Calculate weighting factors
+function getWeights(xValues, yValues, strategy) {
+	return yValues.map((y, i) => {
+		const x = xValues[i];
+		switch (strategy) {
+			case "invY": return y !== 0 ? 1 / Math.abs(y) : 1;
+			case "invY2": return y !== 0 ? 1 / (y * y) : 1;
+			case "invX2": return x !== 0 ? 1 / (x * x) : 1;
+			default: return 1;
+		}
+	});
 }
 
+// Linear fitting fallback
+function fitLinear(xValues, yValues, weights) {
+	let sw = 0, swx = 0, swy = 0, swxx = 0, swxy = 0;
+	for (let i = 0; i < xValues.length; i++) {
+		const x = xValues[i], y = yValues[i], w = weights[i];
+		sw += w; swx += w * x; swy += w * y;
+		swxx += w * x * x; swxy += w * x * y;
+	}
+	const denom = sw * swxx - swx * swx;
+	const m = (sw * swxy - swx * swy) / denom;
+	const c = (swy * swxx - swx * swxy) / denom;
+	return { type: "linear", params: { slope: m, intercept: c }, predict: (x) => m * x + c };
+}
+
+// Main calculation entry point
 function calculate4PL() {
 	try {
 		clearError();
-		const { xValues, yValues } = parseInputData();
-		const result = fit4PL(xValues, yValues);
+		const { xValues, yValues } = parseSpreadsheetTable();
+		const modelType = document.getElementById("fitModel")?.value || "4pl";
+		const weightType = document.getElementById("weighting")?.value || "none";
+		const weights = getWeights(xValues, yValues, weightType);
+
+		let result;
+		if (modelType === "linear") {
+			result = fitLinear(xValues, yValues, weights);
+		} else {
+			result = typeof fit4PL === "function" ? fit4PL(xValues, yValues, weights) : fitLinear(xValues, yValues, weights);
+		}
 
 		lastX = xValues;
 		lastY = yValues;
 		lastResult = result;
 
-		displayResults(result, xValues, yValues);
-		console.log("4PL fit:", result);
+		if (typeof displayResults === "function") {
+			displayResults(result, xValues, yValues);
+		}
+		console.log("Fit result:", result);
 	} catch (error) {
-		console.error("4PL calculation error:", error);
+		console.error("Calculation error:", error);
 		showError(error.message);
+	}
+}
+
+function updateDataCount() {
+	const countEl = document.getElementById("dataCount");
+	if (!countEl) return;
+	try {
+		const { xValues } = parseSpreadsheetTable();
+		countEl.textContent = `${xValues.length} data point${xValues.length === 1 ? "" : "s"}`;
+	} catch {
+		countEl.textContent = "0 data points";
 	}
 }
 
 function showError(message) {
 	let errorBox = document.getElementById("errorMessage");
-
 	if (!errorBox) {
 		errorBox = document.createElement("div");
 		errorBox.id = "errorMessage";
 		errorBox.className = "error-message";
-
 		const inputCard = document.querySelector(".card");
-		if (inputCard) {
-			inputCard.appendChild(errorBox);
-		} else {
-			document.body.appendChild(errorBox);
-		}
+		if (inputCard) inputCard.appendChild(errorBox);
+		else document.body.appendChild(errorBox);
 	}
-
 	errorBox.textContent = message;
 	errorBox.classList.add("visible");
 }
@@ -126,7 +137,6 @@ function clearError() {
 		errorBox.textContent = "";
 		errorBox.classList.remove("visible");
 	}
-
 	const inputError = document.getElementById("inputError");
 	if (inputError) {
 		inputError.textContent = "";
@@ -135,16 +145,9 @@ function clearError() {
 }
 
 function clearCalculator() {
-	const dataInput = document.getElementById("dataInput");
+	initSpreadsheet(8);
 	const results = document.getElementById("results");
-	const preview = document.getElementById("dataPreview");
-	const tbody = document.getElementById("dataPreviewBody");
-
-	if (dataInput) dataInput.value = "";
 	if (results) results.classList.add("hidden");
-	if (preview) preview.classList.add("hidden");
-	if (tbody) tbody.innerHTML = "";
-
 	clearError();
 	lastX = null;
 	lastY = null;
@@ -152,32 +155,75 @@ function clearCalculator() {
 }
 
 function loadExample() {
-	const dataInput = document.getElementById("dataInput");
-	if (!dataInput) return;
-
-	dataInput.value = `Concentration (X)\tResponse (Y)\n0.1\t0.12\n0.5\t0.25\n1\t0.48\n5\t0.72\n10\t0.86\n50\t0.95`;
-
-	updateDataPreview();
+	const exampleData = [
+		[0.1, 0.12], [0.5, 0.25], [1, 0.48],
+		[5, 0.72], [10, 0.86], [50, 0.95]
+	];
+	const tbody = document.getElementById("dataTableBody");
+	if (!tbody) return;
+	tbody.innerHTML = "";
+	exampleData.forEach((pair, idx) => {
+		addSpreadsheetRow(tbody, idx + 1, pair[0], pair[1]);
+	});
+	updateDataCount();
 	clearError();
 	calculate4PL();
 }
 
-window.addEventListener("resize", () => {
-	if (lastX && lastY && lastResult) {
-		drawChart(lastX, lastY, lastResult);
-	}
-});
-
+// Clipboard Paste & Keyboard Listener for Spreadsheet Table
 document.addEventListener("DOMContentLoaded", () => {
-	const dataInput = document.getElementById("dataInput");
+	initSpreadsheet(8);
+
+	const table = document.getElementById("dataTable");
+	if (table) {
+		// Handle Excel / TSV / CSV Clipboard Paste directly into table cells
+		table.addEventListener("paste", (e) => {
+			e.preventDefault();
+			const clipboardData = (e.clipboardData || window.clipboardData).getData("text");
+			if (!clipboardData) return;
+
+			const rows = clipboardData.trim().split(/\r?\n/);
+			const targetCell = e.target.closest("td");
+			const tbody = document.getElementById("dataTableBody");
+
+			let startRowIdx = targetCell ? targetCell.parentElement.rowIndex - 1 : 0;
+			if (startRowIdx < 0) startRowIdx = 0;
+
+			rows.forEach((rowText, rIdx) => {
+				const cols = rowText.split(/\t|,/);
+				const xVal = cols[0] ? cols[0].trim() : "";
+				const yVal = cols[1] ? cols[cols.length > 1 ? 1 : 0].trim() : "";
+
+				if (rIdx === 0 && isNaN(Number(xVal)) && isNaN(Number(yVal))) return;
+
+				let targetRow = tbody.children[startRowIdx + rIdx];
+				if (!targetRow) {
+					addSpreadsheetRow(tbody, tbody.children.length + 1, xVal, yVal);
+				} else {
+					targetRow.querySelector(".cell-x").textContent = xVal;
+					targetRow.querySelector(".cell-y").textContent = yVal;
+				}
+			});
+
+			updateDataCount();
+		});
+
+		table.addEventListener("input", updateDataCount);
+	}
+
 	const calculateButton = document.getElementById("calculateButton");
 	const exampleButton = document.getElementById("exampleButton");
 	const clearButton = document.getElementById("clearButton");
 
-	if (dataInput) dataInput.addEventListener("input", updateDataPreview);
 	if (calculateButton) calculateButton.addEventListener("click", calculate4PL);
 	if (exampleButton) exampleButton.addEventListener("click", loadExample);
 	if (clearButton) clearButton.addEventListener("click", clearCalculator);
+});
+
+window.addEventListener("resize", () => {
+	if (lastX && lastY && lastResult && typeof drawChart === "function") {
+		drawChart(lastX, lastY, lastResult);
+	}
 });
 
 window.calculate4PL = calculate4PL;
