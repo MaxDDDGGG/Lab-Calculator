@@ -41,18 +41,7 @@ function clearError() {
 function getInputBody() {
     return document.querySelector("#dataTable tbody");
 }
-function addInputRow(x = "", y = "") {
-    const tbody = getInputBody();
-    if (!tbody) return;
-    const row = tbody.rows.length + 1;
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-        <td class="row-number">${row}</td>
-        <td class="cell cell-x" contenteditable="true">${escapeHtml(x)}</td>
-        <td class="cell cell-y" contenteditable="true">${escapeHtml(y)}</td>
-    `;
-    tbody.appendChild(tr);
-}
+
 function initInputTable(rows = 8) {
     const tbody = getInputBody();
     if (!tbody) return;
@@ -76,6 +65,52 @@ function updateInputCount() {
     }
     count.textContent = `${valid} data point${valid === 1 ? "" : "s"}`;
 }
+function addInputRow(x = "", y = "") {
+    const tbody = document.getElementById("dataTableBody");
+    if (!tbody) return;
+
+    const row = tbody.rows.length + 1;
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+        <td class="row-number">${row}</td>
+        <td class="cell">
+            <input class="cell-input cell-x" type="text" value="${escapeHtml(x)}">
+        </td>
+        <td class="cell">
+            <input class="cell-input cell-y" type="text" value="${escapeHtml(y)}">
+        </td>
+    `;
+
+    tbody.appendChild(tr);
+}
+
+
+function addPredictionRow(sample = "", y = "") {
+    const tbody = document.getElementById("predictTableBody");
+    if (!tbody) return;
+
+    const row = tbody.rows.length + 1;
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+        <td class="row-number">${row}</td>
+        <td class="cell">
+            <input class="cell-input cell-sample" type="text"
+                   value="${escapeHtml(sample)}">
+        </td>
+        <td class="cell">
+            <input class="cell-input cell-predict-y" type="text"
+                   value="${escapeHtml(y)}">
+        </td>
+        <td class="cell cell-predict-x"></td>
+    `;
+
+    tbody.appendChild(tr);
+}
+
 function ensureInputRow() {
     const tbody = getInputBody();
     if (!tbody || !tbody.lastElementChild) return;
