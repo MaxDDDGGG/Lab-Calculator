@@ -3,97 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab Calculator</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="app.js" defer></script>
+<title>Lab Calculator</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="app.js" defer></script>
 </head>
 <body>
-    <main class="container">
-        <header>
-            <h1>Lab Calculator</h1>
-        </header>
-        <section class="card">
-            <div class="section-header">
-                <div>
-                    <h2>Standard Curve Data</h2>
-                    <p class="section-description">Paste data directly from Excel or Google Sheets.</p>
-                </div>
-            </div>
-            <div class="spreadsheet-wrapper">
-                <table id="dataTable" class="spreadsheet">
-                    <thead>
-                        <tr>
-                            <th class="corner-cell"></th>
-                            <th class="column-letter">A</th>
-                            <th class="column-letter">B</th>
-                        </tr>
-                        <tr class="header-row">
-                            <th class="row-number"></th>
-                            <th>Concentration (X)</th>
-                            <th>Response (Y)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dataTableBody">
-                    </tbody>
-                </table>
-            </div>
-            <div class="table-footer">
-                <span id="dataCount">0 data points</span>
-                <span>Tip: Type or Paste directly from Excel or Google Sheets.</span>
-            </div>
-            <div id="inputError" class="input-error hidden"></div>
-            <div class="button-row">
-                <button id="calculateButton" class="primary-button">Draw</button>
-                <button id="clearButton" class="secondary-button">Clear</button>
-            </div>
-        </section>
-        
-        <section id="results" class="card hidden">
-            <div class="result-header">
-                <div>
-                    <span class="eyebrow">Analysis Complete</span>
-                    <h2>Results</h2>
-                </div>
-                <span id="pointCount" class="point-count">0 Points Fitted</span>
-            </div>
-            <div id="parameters"></div>
-            <div class="chart-container">
-                <canvas id="fitChart"></canvas>
-            </div>
-        </section>
-        
-        <section class="card">
-            <div class="fit-options-row">
-                <label for="fitModel">Fit Model:
-                    <select id="fitModel">
-                        <option value="4pl_unconstrained">4PL (Unconstrained)</option>
-                        <option value="4pl_constrained">4PL (Constrained)</option>
-                        <option value="5pl">5PL</option>
-                        <option value="linear">Linear</option>
-                        <option value="quadratic">Quadratic</option>
-                        <option value="cubic">Cubic</option>
-                        <option value="michaelisMenten">Michaelis-Menten</option>
-                        <option value="expGrowth">Exponential Growth</option>
-                        <option value="expDecay">Exponential Decay</option>
-                        <option value="gaussian">Gaussian</option>
-                    </select>
-                </label>
-                <label for="weighting">Weighting:
-                    <select id="weighting">
-                        <option value="none" selected>None (w = 1)</option>
-                        <option value="invY">1 / Y</option>
-                        <option value="invY2">1 / Y²</option>
-                        <option value="invX">1 / X</option>
-                        <option value="invX2">1 / X²</option>
-                    </select>
-                </label>
-            </div>
-        </section>
-
-    </main>
-
-    <script src="app.js"></script>
-
+<main class="container">
+<header>
+    <h1>Lab Calculator</h1>
+</header>
+<!-- =========================================================
+     STANDARD CURVE DATA
+     ========================================================= -->
+<section class="card">
+    <div class="section-header">
+        <div>
+            <h2>Standard Curve Data</h2>
+            <p class="section-description">
+                Paste data directly from Excel or Google Sheets.
+            </p>
+        </div>
+    </div>
+    <div class="spreadsheet-wrapper">
+        <table id="dataTable" class="spreadsheet">
+            <thead>
+                <tr>
+                    <th class="corner-cell"></th>
+                    <th class="column-letter">A</th>
+                    <th class="column-letter">B</th>
+                </tr>
+                <tr class="header-row">
+                    <th class="row-number"></th>
+                    <th>Concentration (X)</th>
+                    <th>Response (Y)</th>
+                </tr>
+            </thead>
+            <tbody id="dataTableBody">
+            </tbody>
+        </table>
+    </div>
+    <div class="table-footer">
+        <span id="dataCount">0 data points</span>
+        <span>
+            Tip: Type or Paste directly from Excel or Google Sheets.
+        </span>
+    </div>
+    <div id="inputError" class="input-error hidden"></div>
+    <div class="button-row">
+        <button id="calculateButton" class="primary-button">
+            Draw
+        </button>
+        <button id="clearButton" class="secondary-button">
+            Clear
+        </button>
+    </div>
+</section>
+<!-- =========================================================
+     PREDICTION DATA
+     ========================================================= -->
+<section class="card">
+    <div class="section-header">
+        <div>
+            <h2>Predict</h2>
+            <p class="section-description">
+                Enter sample names and response values to calculate
+                concentrations from the fitted curve.
+            </p>
+        </div>
+    </div>
+    <div class="spreadsheet-wrapper">
+        <table id="predictTable" class="spreadsheet">
+            <thead>
+                <tr>
+                    <th class="corner-cell"></th>
+                    <th class="column-letter">A</th>
+                    <th class="column-letter">B</th>
+                </tr>
+                <tr class="header-row">
+                    <th class="row-number"></th>
+                    <th>Sample</th>
+                    <th>Response (Y)</th>
+                </tr>
+            </thead>
+            <tbody id="predictTableBody">
+            </tbody>
+        </table>
+    </div>
+    <div class="table-footer">
+        <span id="predictCount">
+            0 samples
+        </span>
+        <span>
+            Tip: Paste sample names and response values directly from Excel.
+        </span>
+    </div>
+    <div id="predictError" class="input-error hidden"></div>
+</section>
+<!-- =========================================================
+     RESULTS
+     ========================================================= -->
+<section id="results" class="card hidden">
+    <div class="result-header">
+        <div>
+            <span class="eyebrow">
+                Analysis Complete
+            </span>
+            <h2>Results</h2>
+        </div>
+        <span id="pointCount" class="point-count">
+            0 Points Fitted
+        </span>
+    </div>
+    <div id="parameters"></div>
+    <div class="chart-container">
+        <canvas id="fitChart"></canvas>
+    </div>
+</section>
+<!-- =========================================================
+     FIT OPTIONS
+     ========================================================= -->
+<section class="card">
+    <div class="fit-options-row">
+        <label for="fitModel">
+            Fit Model:
+            <select id="fitModel">
+                <option value="4pl_unconstrained">
+                    4PL (Unconstrained)
+                </option>
+                <option value="4pl_constrained">
+                    4PL (Constrained)
+                </option>
+                <option value="5pl">
+                    5PL
+                </option>
+                <option value="linear">
+                    Linear
+                </option>
+                <option value="quadratic">
+                    Quadratic
+                </option>
+                <option value="cubic">
+                    Cubic
+                </option>
+                <option value="michaelisMenten">
+                    Michaelis-Menten
+                </option>
+                <option value="expGrowth">
+                    Exponential Growth
+                </option>
+                <option value="expDecay">
+                    Exponential Decay
+                </option>
+                <option value="gaussian">
+                    Gaussian
+                </option>
+            </select>
+        </label>
+        <label for="weighting">
+            Weighting:
+            <select id="weighting">
+                <option value="none" selected>
+                    None (w = 1)
+                </option>
+                <option value="invY">
+                    1 / Y
+                </option>
+                <option value="invY2">
+                    1 / Y²
+                </option>
+                <option value="invX">
+                    1 / X
+                </option>
+                <option value="invX2">
+                    1 / X²
+                </option>
+            </select>
+        </label>
+    </div>
+</section>
+</main>
 </body>
 </html>
