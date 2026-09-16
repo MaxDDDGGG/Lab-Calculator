@@ -13,96 +13,10 @@
 <header>
     <h1>Lab Calculator</h1>
 </header>
+
 <!-- =========================================================
-     STANDARD CURVE DATA
-     ========================================================= -->
-<section class="card">
-    <div class="section-header">
-        <div>
-            <h2>Standard Curve Data</h2>
-            <p class="section-description">
-                Paste data directly from Excel or Google Sheets.
-            </p>
-        </div>
-    </div>
-    <div class="spreadsheet-wrapper">
-        <table id="dataTable" class="spreadsheet">
-            <thead>
-                <tr>
-                    <th class="corner-cell"></th>
-                    <th class="column-letter">A</th>
-                    <th class="column-letter">B</th>
-                </tr>
-                <tr class="header-row">
-                    <th class="row-number"></th>
-                    <th>Concentration (X)</th>
-                    <th>Response (Y)</th>
-                </tr>
-            </thead>
-            <tbody id="dataTableBody">
-            </tbody>
-        </table>
-    </div>
-    <div class="table-footer">
-        <span id="dataCount">0 data points</span>
-        <span>
-            Tip: Type or Paste directly from Excel or Google Sheets.
-        </span>
-    </div>
-    <div id="inputError" class="input-error hidden"></div>
-    <div class="button-row">
-        <button id="calculateButton" class="primary-button">
-            Draw
-        </button>
-        <button id="clearButton" class="secondary-button">
-            Clear
-        </button>
-    </div>
-</section>
-<!-- =========================================================
-     PREDICTION DATA
-     ========================================================= -->
-<section class="card">
-    <div class="section-header">
-        <div>
-            <h2>Predict</h2>
-            <p class="section-description">
-                Enter sample names and response values to calculate
-                concentrations from the fitted curve.
-            </p>
-        </div>
-    </div>
-    <div class="spreadsheet-wrapper">
-        <table id="predictTable" class="spreadsheet">
-            <thead>
-                <tr>
-                    <th class="corner-cell"></th>
-                    <th class="column-letter">A</th>
-                    <th class="column-letter">B</th>
-                </tr>
-                <tr class="header-row">
-                    <th class="row-number"></th>
-                    <th>Sample</th>
-                    <th>Response (Y)</th>
-                </tr>
-            </thead>
-            <tbody id="predictTableBody">
-            </tbody>
-        </table>
-    </div>
-    <div class="table-footer">
-        <span id="predictCount">
-            0 samples
-        </span>
-        <span>
-            Tip: Paste sample names and response values directly from Excel.
-        </span>
-    </div>
-    <div id="predictError" class="input-error hidden"></div>
-</section>
-<!-- =========================================================
-     RESULTS
-     ========================================================= -->
+    RESULTS
+    ========================================================= -->
 <section id="results" class="card hidden">
     <div class="result-header">
         <div>
@@ -120,10 +34,13 @@
         <canvas id="fitChart"></canvas>
     </div>
 </section>
+
+
 <!-- =========================================================
-     FIT OPTIONS
-     ========================================================= -->
+    FIT OPTIONS
+    ========================================================= -->
 <section class="card">
+    <h2>Fit Options</h2>
     <div class="fit-options-row">
         <label for="fitModel">
             Fit Model:
@@ -181,7 +98,83 @@
             </select>
         </label>
     </div>
+
+    <button id="calculateButton" type="button" class="btn btn-primary" style="margin-top: 10px">
+        Calculate Fit
+    </button>
 </section>
+
+<!-- =========================================================
+    STANDARD CURVE DATA
+    ========================================================= -->
+<section class="card">
+    <div class="section-header">
+        <div>
+            <h2>Standard Curve Data</h2>
+            <p class="section-description">
+                Paste data directly from Excel or Google Sheets.
+            </p>
+        </div>
+    </div>
+<!-- Input Data & Prediction Section -->
+<div class="tables-container">
+    
+    <!-- Left Column: Data Input Section -->
+    <div class="spreadsheet-wrapper">
+        <div class="section-header">
+            <div>
+                <h2>Data Input</h2>
+                <p class="section-description">Enter standard concentrations (X) and responses (Y).</p>
+            </div>
+            <div id="dataCount" class="count-badge">0 data points</div>
+        </div>
+
+        <div id="inputError" class="error-message hidden"></div>
+
+        <table id="dataTable" class="spreadsheet">
+            <thead>
+                <tr>
+                    <th class="corner-cell"></th>
+                    <th class="column-letter">Concentration (X)</th>
+                    <th class="column-letter">Response (Y)</th>
+                </tr>
+            </thead>
+            <tbody id="dataTableBody">
+                <!-- JavaScript dynamically seeds initial input rows here -->
+            </tbody>
+        </table>
+
+    </div>
+
+    <!-- Right Column: Prediction Section -->
+    <div class="spreadsheet-wrapper">
+        <div class="section-header">
+            <div>
+                <h2>Predict</h2>
+                <p class="section-description">Fit a model to enable predictions.</p>
+            </div>
+            <div id="predictCount" class="count-badge">0 samples</div>
+            <button id="copyPredictionButton" class="btn-copy-mini">Copy</button>
+        </div>
+
+        <table id="predictTable" class="spreadsheet">
+            <thead>
+                <tr>
+                    <th class="corner-cell"></th>
+                    <th class="column-letter">Sample</th>
+                    <th class="column-letter">Predicted X</th>
+                </tr>
+            </thead>
+            <tbody id="predictTableBody">
+                <!-- JavaScript dynamically seeds prediction rows here -->
+            </tbody>
+        </table>
+        
+        <div id="predictError" class="input-error hidden"></div>
+    </div>
+</div>
+</section>
+
 </main>
 </body>
 </html>

@@ -1,19 +1,24 @@
 "use strict";
+
 /* ============================================================
    LAB CALCULATOR
    Clean spreadsheet input + prediction table
    ============================================================ */
+
 let lastX = [];
 let lastY = [];
 let lastResult = null;
 let fitChart = null;
+
 /* ============================================================
    HELPERS
    ============================================================ */
+
 function formatNumber(value, significant = 8) {
     if (!Number.isFinite(value)) return "N/A";
     return Number(value).toPrecision(significant);
 }
+
 function escapeHtml(value) {
     return String(value)
         .replace(/&/g, "&amp;")
@@ -22,12 +27,14 @@ function escapeHtml(value) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
 }
+
 function showError(message) {
     const el = document.getElementById("inputError");
     if (!el) return;
     el.textContent = message;
     el.classList.remove("hidden");
 }
+
 function clearError() {
     const el = document.getElementById("inputError");
     if (el) {
@@ -35,11 +42,13 @@ function clearError() {
         el.classList.add("hidden");
     }
 }
+
 /* ============================================================
    STANDARD INPUT TABLE
    ============================================================ */
+
 function getInputBody() {
-    return document.querySelector("#dataTable tbody");
+    return document.getElementById("dataTableBody");
 }
 
 function initInputTable(rows = 8) {
@@ -51,26 +60,27 @@ function initInputTable(rows = 8) {
     }
     updateInputCount();
 }
+
 function updateInputCount() {
     const tbody = getInputBody();
     const count = document.getElementById("dataCount");
     if (!tbody || !count) return;
     let valid = 0;
     for (const row of tbody.rows) {
-        const x = row.querySelector(".cell-x")?.textContent.trim();
-        const y = row.querySelector(".cell-y")?.textContent.trim();
+        const x = row.querySelector(".cell-x")?.value.trim();
+        const y = row.querySelector(".cell-y")?.value.trim();
         if (x !== "" && y !== "" && Number.isFinite(Number(x)) && Number.isFinite(Number(y))) {
             valid++;
         }
     }
     count.textContent = `${valid} data point${valid === 1 ? "" : "s"}`;
 }
+
 function addInputRow(x = "", y = "") {
-    const tbody = document.getElementById("dataTableBody");
+    const tbody = getInputBody();
     if (!tbody) return;
 
     const row = tbody.rows.length + 1;
-
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
@@ -82,32 +92,6 @@ function addInputRow(x = "", y = "") {
             <input class="cell-input cell-y" type="text" value="${escapeHtml(y)}">
         </td>
     `;
-
-    tbody.appendChild(tr);
-}
-
-
-function addPredictionRow(sample = "", y = "") {
-    const tbody = document.getElementById("predictTableBody");
-    if (!tbody) return;
-
-    const row = tbody.rows.length + 1;
-
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-        <td class="row-number">${row}</td>
-        <td class="cell">
-            <input class="cell-input cell-sample" type="text"
-                   value="${escapeHtml(sample)}">
-        </td>
-        <td class="cell">
-            <input class="cell-input cell-predict-y" type="text"
-                   value="${escapeHtml(y)}">
-        </td>
-        <td class="cell cell-predict-x"></td>
-    `;
-
     tbody.appendChild(tr);
 }
 
@@ -115,15 +99,17 @@ function ensureInputRow() {
     const tbody = getInputBody();
     if (!tbody || !tbody.lastElementChild) return;
     const last = tbody.lastElementChild;
-    const x = last.querySelector(".cell-x")?.textContent.trim();
-    const y = last.querySelector(".cell-y")?.textContent.trim();
+    const x = last.querySelector(".cell-x")?.value.trim();
+    const y = last.querySelector(".cell-y")?.value.trim();
     if (x !== "" || y !== "") {
         addInputRow();
     }
 }
+
 /* ============================================================
    PARSE INPUT TABLE
    ============================================================ */
+
 function getInputData() {
     const tbody = getInputBody();
     if (!tbody) {
@@ -132,8 +118,8 @@ function getInputData() {
     const x = [];
     const y = [];
     for (const row of tbody.rows) {
-        const xText = row.querySelector(".cell-x")?.textContent.trim();
-        const yText = row.querySelector(".cell-y")?.textContent.trim();
+        const xText = row.querySelector(".cell-x")?.value.trim();
+        const yText = row.querySelector(".cell-y")?.value.trim();
         if (!xText && !yText) continue;
         const xv = Number(xText);
         const yv = Number(yText);
@@ -148,9 +134,11 @@ function getInputData() {
     }
     return { x, y };
 }
+
 /* ============================================================
    EXCEL / GOOGLE SHEETS PASTE
    ============================================================ */
+
 function handleInputPaste(event) {
     const text = event.clipboardData?.getData("text");
     if (!text) return;
@@ -166,7 +154,7 @@ function handleInputPaste(event) {
         return [line];
     });
     if (!rows.length) return;
-    // Remove a header row if the first row is not numeric.
+
     if (
         rows.length > 1 &&
         (!Number.isFinite(Number(rows[0][0])) ||
@@ -189,71 +177,34 @@ function handleInputPaste(event) {
     }
     updateInputCount();
 }
+
 /* ============================================================
    PREDICTION TABLE
    ============================================================ */
-function createPredictionTable() {
-    const wrapper = document.querySelector(".spreadsheet-wrapper");
-    if (!wrapper) return;
-    if (document.getElementById("predictTable")) return;
-    const title = document.createElement("div");
-    title.className = "section-header";
-    title.innerHTML = `
-        <div>
-            <h2>Predict</h2>
-            <p class="section-description">
-                Enter sample responses to calculate predicted concentrations.
-            </p>
-        </div>
-    `;
-    const table = document.createElement("table");
-    table.id = "predictTable";
-    table.className = "spreadsheet";
-    table.innerHTML = `
-        <thead>
-            <tr>
-                <th class="corner-cell"></th>
-                <th class="column-letter">A</th>
-                <th class="column-letter">B</th>
-                <th class="column-letter">C</th>
-            </tr>
-            <tr class="header-row">
-                <th class="row-number"></th>
-                <th>Sample</th>
-                <th>Response (Y)</th>
-                <th>Predicted X</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    `;
-    const footer = document.createElement("div");
-    footer.className = "table-footer";
-    footer.innerHTML = `
-        <span id="predictCount">0 samples</span>
-        <span id="predictionStatus">Fit a model to enable predictions.</span>
-        <button id="copyPredictionButton" class="btn-copy-mini">
-            Copy
-        </button>
-    `;
-    wrapper.appendChild(title);
-    wrapper.appendChild(table);
-    wrapper.appendChild(footer);
+
+function getPredictBody() {
+    return document.getElementById("predictTableBody");
 }
-function addPredictionRow(sample = "", y = "") {
-    const tbody = document.querySelector("#predictTable tbody");
+
+function addPredictionRow(y = "") {
+    const tbody = getPredictBody();
     if (!tbody) return;
+
     const row = tbody.rows.length + 1;
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
         <td class="row-number">${row}</td>
-        <td class="cell cell-sample" contenteditable="true">${escapeHtml(sample)}</td>
-        <td class="cell cell-predict-y" contenteditable="true">${escapeHtml(y)}</td>
+        <td class="cell">
+            <input class="cell-input cell-predict-y" type="text" value="${escapeHtml(y)}">
+        </td>
         <td class="cell cell-predict-x"></td>
     `;
     tbody.appendChild(tr);
 }
+
 function initPredictionTable(rows = 8) {
-    const tbody = document.querySelector("#predictTable tbody");
+    const tbody = getPredictBody();
     if (!tbody) return;
     tbody.innerHTML = "";
     for (let i = 0; i < rows; i++) {
@@ -261,31 +212,35 @@ function initPredictionTable(rows = 8) {
     }
     updatePredictionCount();
 }
+
 function ensurePredictionRow() {
-    const tbody = document.querySelector("#predictTable tbody");
+    const tbody = getPredictBody();
     if (!tbody || !tbody.lastElementChild) return;
     const last = tbody.lastElementChild;
-    const sample = last.querySelector(".cell-sample")?.textContent.trim();
-    const y = last.querySelector(".cell-predict-y")?.textContent.trim();
-    if (sample !== "" || y !== "") {
+    const y = last.querySelector(".cell-predict-y")?.value.trim();
+    
+    // Add a new blank row if the last row's Y has data
+    if (y !== "") {
         addPredictionRow();
     }
 }
+
 function updatePredictionCount() {
-    const tbody = document.querySelector("#predictTable tbody");
+    const tbody = getPredictBody();
     const count = document.getElementById("predictCount");
     if (!tbody || !count) return;
     let n = 0;
     for (const row of tbody.rows) {
-        const sample = row.querySelector(".cell-sample")?.textContent.trim();
-        const y = row.querySelector(".cell-predict-y")?.textContent.trim();
-        if (sample || y) n++;
+        const y = row.querySelector(".cell-predict-y")?.value.trim();
+        if (y !== "") n++;
     }
-    count.textContent = `${n} sample${n === 1 ? "" : "s"}`;
+    count.textContent = `${n} prediction${n === 1 ? "" : "s"}`;
 }
+
 /* ============================================================
    PREDICTION PASTE
    ============================================================ */
+
 function handlePredictionPaste(event) {
     const text = event.clipboardData?.getData("text");
     if (!text) return;
@@ -295,42 +250,45 @@ function handlePredictionPaste(event) {
         .split("\n")
         .map(line => line.trim())
         .filter(Boolean);
+        
     let rows = lines.map(line => {
         if (line.includes("\t")) return line.split("\t");
         if (line.includes(",")) return line.split(",");
         return [line];
     });
+    
     if (!rows.length) return;
-    // Skip header.
-    if (!Number.isFinite(Number(rows[0][rows[0].length - 1]))) {
+
+    // Check if first row is a header
+    if (!Number.isFinite(Number(rows[0][0]))) {
         rows.shift();
     }
-    const tbody = document.querySelector("#predictTable tbody");
+    
+    const tbody = getPredictBody();
     if (!tbody) return;
     tbody.innerHTML = "";
-    let sampleNumber = 1;
+    
     for (const row of rows) {
-        let sample;
-        let y;
-        if (row.length >= 2) {
-            sample = row[0].trim();
-            y = row[1].trim();
-        } else {
-            sample = `Sample ${sampleNumber}`;
-            y = row[0].trim();
-        }
-        addPredictionRow(sample, y);
-        sampleNumber++;
+        // Assume user is pasting a single column of Y values, 
+        // or take the first column if they paste a grid.
+        const y = row[0].trim(); 
+        if (y !== "") addPredictionRow(y);
     }
+    
     while (tbody.rows.length < 8) {
         addPredictionRow();
     }
     updatePredictionCount();
-    updatePredictions();
+    
+    // Trigger calculation update if the function exists
+    if (typeof updatePredictions === "function") {
+        updatePredictions();
+    }
 }
 /* ============================================================
    MATRIX SOLVER
    ============================================================ */
+
 function solveMatrix(A, b) {
     const n = A.length;
     const M = A.map((row, i) => [...row, b[i]]);
@@ -362,9 +320,11 @@ function solveMatrix(A, b) {
     }
     return result;
 }
+
 /* ============================================================
    WEIGHTING
    ============================================================ */
+
 function getWeight(x, y, mode) {
     switch (mode) {
         case "invY":
@@ -379,9 +339,11 @@ function getWeight(x, y, mode) {
             return 1;
     }
 }
+
 /* ============================================================
    LINEAR
    ============================================================ */
+
 function fitLinear(x, y, weighting) {
     let sw = 0;
     let sx = 0;
@@ -410,9 +372,11 @@ function fitLinear(x, y, weighting) {
         equation: `y = ${formatNumber(m)}x + ${formatNumber(c)}`
     };
 }
+
 /* ============================================================
    POLYNOMIAL
    ============================================================ */
+
 function fitPolynomial(x, y, degree, weighting) {
     const size = degree + 1;
     const A = Array.from({ length: size }, () => Array(size).fill(0));
@@ -434,6 +398,18 @@ function fitPolynomial(x, y, degree, weighting) {
         }
         return value;
     };
+    
+    // Inverse calculation for quadratic using quadratic formula: ax^2 + bx + (c - y) = 0
+    let inverse = null;
+    if (degree === 2) {
+        const c_coef = p[0], b_coef = p[1], a_coef = p[2];
+        inverse = yValue => {
+            const discriminant = b_coef * b_coef - 4 * a_coef * (c_coef - yValue);
+            if (discriminant < 0 || Math.abs(a_coef) < 1e-12) return null;
+            return (-b_coef + Math.sqrt(discriminant)) / (2 * a_coef);
+        };
+    }
+
     let equation = "y = ";
     for (let i = degree; i >= 0; i--) {
         if (Math.abs(p[i]) < 1e-12) continue;
@@ -450,16 +426,19 @@ function fitPolynomial(x, y, degree, weighting) {
         type: degree === 2 ? "quadratic" : "cubic",
         params: { coefficients: p },
         predict,
-        inverse: null,
+        inverse,
         equation
     };
 }
+
 /* ============================================================
    4PL
    ============================================================ */
+
 function fourPL(x, A, B, C, D) {
     return D + (A - D) / (1 + Math.pow(x / C, B));
 }
+
 function fit4PL(x, y, weighting, constrained) {
     const minY = Math.min(...y);
     const maxY = Math.max(...y);
@@ -470,6 +449,7 @@ function fit4PL(x, y, weighting, constrained) {
     let B = 1;
     let C = (minX + maxX) / 2;
     if (C <= 0) C = Math.max(minX, 0.001);
+    
     function error() {
         let total = 0;
         for (let i = 0; i < x.length; i++) {
@@ -479,6 +459,7 @@ function fit4PL(x, y, weighting, constrained) {
         }
         return total;
     }
+    
     let best = error();
     for (let i = 0; i < 3000; i++) {
         const old = { A, B, C, D };
@@ -508,14 +489,15 @@ function fit4PL(x, y, weighting, constrained) {
             D = old.D;
         }
     }
+    
     return {
         type: "4pl",
         constrained,
         params: {
-            bottom: A,
-            hillSlope: B,
-            ic50: C,
-            top: D
+            A: A,
+            B: B,
+            C: C,
+            D: D
         },
         predict: xv => fourPL(xv, A, B, C, D),
         inverse: yValue => {
@@ -524,22 +506,21 @@ function fit4PL(x, y, weighting, constrained) {
             if (yValue <= low || yValue >= high) return null;
             const denominator = yValue - D;
             if (Math.abs(denominator) < 1e-12) return null;
-            const base = (A - yValue) / denominator - 1;
+            const base = (A - yValue) / denominator; 
             if (base <= 0) return null;
+            
             return C * Math.pow(base, 1 / B);
-        },
-        equation:
-            `y = ${formatNumber(D)} + (${formatNumber(A)} - ${formatNumber(D)}) / ` +
-            `(1 + (x / ${formatNumber(C)})^${formatNumber(B)})`
-    };
+        }
+    }; // <-- Added this closing brace for the returned object
 }
 /* ============================================================
    5PL
    ============================================================ */
+
 function fivePL(x, A, B, C, D, G) {
-    return D + (A - D) /
-        Math.pow(1 + Math.pow(x / C, B), G);
+    return D + (A - D) / Math.pow(1 + Math.pow(x / C, B), G);
 }
+
 function fit5PL(x, y, weighting) {
     const minY = Math.min(...y);
     const maxY = Math.max(...y);
@@ -580,10 +561,10 @@ function fit5PL(x, y, weighting) {
     return {
         type: "5pl",
         params: {
-            bottom: A,
-            hillSlope: B,
-            ic50: C,
-            top: D,
+            A: A,
+            B: B,
+            C: C,
+            D: D,
             asymmetry: G
         },
         predict: xv => fivePL(xv, A, B, C, D, G),
@@ -602,9 +583,11 @@ function fit5PL(x, y, weighting) {
         equation: "5PL model"
     };
 }
+
 /* ============================================================
    MICHAELIS-MENTEN
    ============================================================ */
+
 function fitMichaelisMenten(x, y, weighting) {
     let vmax = Math.max(...y);
     let km = Math.max(...x) / 2;
@@ -618,8 +601,7 @@ function fitMichaelisMenten(x, y, weighting) {
             const error = prediction - y[i];
             const w = getWeight(x[i], y[i], weighting);
             gradV += 2 * w * error * x[i] / denominator;
-            gradK += 2 * w * error * (-vmax * x[i]) /
-                (denominator * denominator);
+            gradK += 2 * w * error * (-vmax * x[i]) / (denominator * denominator);
         }
         vmax -= gradV * 0.0001;
         km -= gradK * 0.0001;
@@ -634,13 +616,14 @@ function fitMichaelisMenten(x, y, weighting) {
             if (yValue < 0 || yValue >= vmax) return null;
             return yValue * km / (vmax - yValue);
         },
-        equation:
-            `y = ${formatNumber(vmax)}x / (${formatNumber(km)} + x)`
+        equation: `y = ${formatNumber(vmax)}x / (${formatNumber(km)} + x)`
     };
 }
+
 /* ============================================================
    EXPONENTIAL
    ============================================================ */
+
 function fitExponential(x, y, decay = false) {
     const transformed = y.map(v => Math.max(v, 1e-12));
     const logY = transformed.map(v => Math.log(v));
@@ -652,10 +635,8 @@ function fitExponential(x, y, decay = false) {
             type: "expGrowth",
             params: { A, k },
             predict: xv => A * Math.exp(k * xv),
-            inverse: yValue =>
-                yValue > 0 ? Math.log(yValue / A) / k : null,
-            equation:
-                `y = ${formatNumber(A)}e^(${formatNumber(k)}x)`
+            inverse: yValue => yValue > 0 ? Math.log(yValue / A) / k : null,
+            equation: `y = ${formatNumber(A)}e^(${formatNumber(k)}x)`
         };
     }
     const A = Math.exp(linear.params.c);
@@ -664,43 +645,35 @@ function fitExponential(x, y, decay = false) {
         type: "expDecay",
         params: { A, k, offset: 0 },
         predict: xv => A * Math.exp(-k * xv),
-        inverse: yValue =>
-            yValue > 0 && A > 0 && k !== 0
-                ? -Math.log(yValue / A) / k
-                : null,
-        equation:
-            `y = ${formatNumber(A)}e^(-${formatNumber(k)}x)`
+        inverse: yValue => yValue > 0 && A > 0 && k !== 0 ? -Math.log(yValue / A) / k : null,
+        equation: `y = ${formatNumber(A)}e^(-${formatNumber(k)}x)`
     };
 }
+
 /* ============================================================
    GAUSSIAN
    ============================================================ */
+
 function fitGaussian(x, y, weighting) {
     let amplitude = Math.max(...y);
     let mean = x[y.indexOf(amplitude)];
     let sd = Math.max((Math.max(...x) - Math.min(...x)) / 4, 0.001);
     function predict(xv) {
-        return amplitude *
-            Math.exp(-Math.pow(xv - mean, 2) / (2 * sd * sd));
+        return amplitude * Math.exp(-Math.pow(xv - mean, 2) / (2 * sd * sd));
     }
     return {
         type: "gaussian",
-        params: {
-            amplitude,
-            mean,
-            sd
-        },
+        params: { amplitude, mean, sd },
         predict,
-        // Gaussian generally has two X values for one Y.
         inverse: () => null,
-        equation:
-            `y = ${formatNumber(amplitude)} exp(-(x-${formatNumber(mean)})² / ` +
-            `(2 × ${formatNumber(sd)}²))`
+        equation: `y = ${formatNumber(amplitude)} exp(-(x-${formatNumber(mean)})² / (2 × ${formatNumber(sd)}²))`
     };
 }
+
 /* ============================================================
    MODEL SELECTION
    ============================================================ */
+
 function fitModel(model, x, y, weighting) {
     switch (model) {
         case "4pl_unconstrained":
@@ -727,15 +700,11 @@ function fitModel(model, x, y, weighting) {
             throw new Error("Unknown fit model.");
     }
 }
-/* ============================================================
-   MODEL NAME
-   ============================================================ */
+
 function modelName(result) {
     if (!result) return "";
     if (result.type === "4pl") {
-        return result.constrained
-            ? "4PL (Constrained)"
-            : "4PL (Unconstrained)";
+        return result.constrained ? "4PL (Constrained)" : "4PL (Unconstrained)";
     }
     switch (result.type) {
         case "5pl": return "5PL";
@@ -749,10 +718,12 @@ function modelName(result) {
         default: return result.type;
     }
 }
+
 /* ============================================================
    FIT STATISTICS
    ============================================================ */
-function calculateFitStats(x, y, result, parameterCount) {
+
+function calculateFitStats(x, y, result) {
     const predictions = x.map(result.predict);
     const mean = y.reduce((a, b) => a + b, 0) / y.length;
     let ssTot = 0;
@@ -769,24 +740,22 @@ function calculateFitStats(x, y, result, parameterCount) {
         sse: ssRes
     };
 }
+
 /* ============================================================
    RESULTS
    ============================================================ */
+
 function displayResults(result) {
     const results = document.getElementById("results");
     const parameters = document.getElementById("parameters");
     const pointCount = document.getElementById("pointCount");
     if (!results || !parameters) return;
+
     results.classList.remove("hidden");
     if (pointCount) {
         pointCount.textContent = `${lastX.length} Points Fitted`;
     }
-    const stats = calculateFitStats(
-        lastX,
-        lastY,
-        result,
-        Object.keys(result.params).length
-    );
+    const stats = calculateFitStats(lastX, lastY, result);
     let html = `
         <div class="parameter-grid" id="parameterGrid">
             <div class="parameter-card">
@@ -824,9 +793,7 @@ function displayResults(result) {
     drawChart(result);
     updatePredictions(result);
 }
-/* ============================================================
-   CHART
-   ============================================================ */
+
 function drawChart(result) {
     const canvas = document.getElementById("fitChart");
     if (!canvas || typeof Chart === "undefined") return;
@@ -849,10 +816,7 @@ function drawChart(result) {
             datasets: [
                 {
                     label: "Observed Data",
-                    data: lastX.map((x, i) => ({
-                        x,
-                        y: lastY[i]
-                    })),
+                    data: lastX.map((x, i) => ({ x, y: lastY[i] })),
                     showLine: false
                 },
                 {
@@ -870,30 +834,27 @@ function drawChart(result) {
             scales: {
                 x: {
                     type: "linear",
-                    title: {
-                        display: true,
-                        text: "Concentration (X)"
-                    }
+                    title: { display: true, text: "Concentration (X)" }
                 },
                 y: {
-                    title: {
-                        display: true,
-                        text: "Response (Y)"
-                    }
+                    title: { display: true, text: "Response (Y)" }
                 }
             }
         }
     });
 }
+
 /* ============================================================
    PREDICTIONS
    ============================================================ */
+
 function updatePredictions(result = lastResult) {
-    const tbody = document.querySelector("#predictTable tbody");
+    const tbody = getPredictBody();
     const status = document.getElementById("predictionStatus");
     if (!tbody) return;
+
     for (const row of tbody.rows) {
-        const yText = row.querySelector(".cell-predict-y")?.textContent.trim();
+        const yText = row.querySelector(".cell-predict-y")?.value.trim();
         const output = row.querySelector(".cell-predict-x");
         if (!output) continue;
         if (!yText) {
@@ -906,39 +867,28 @@ function updatePredictions(result = lastResult) {
             continue;
         }
         const x = result.inverse(y);
-        output.textContent =
-            Number.isFinite(x)
-                ? formatNumber(x)
-                : "N/A";
+        output.textContent = Number.isFinite(x) ? formatNumber(x) : "N/A";
     }
     if (!status) return;
     if (!result) {
         status.textContent = "Fit a model to enable predictions.";
-    } else if (result.type === "gaussian") {
-        status.textContent = "N/A — Gaussian cannot be reliably inverted.";
+    } else if (result.type === "gaussian" || (result.type === "cubic")) {
+        status.textContent = `N/A — ${modelName(result)} cannot be reliably inverted.`;
     } else {
         status.textContent = "Predictions calculated from fitted model.";
     }
 }
-/* ============================================================
-   COPY PREDICTIONS
-   ============================================================ */
+
 async function copyPredictions() {
-    const tbody = document.querySelector("#predictTable tbody");
+    const tbody = getPredictBody();
     if (!tbody) return;
-    const lines = [
-        ["Sample", "Response (Y)", "Predicted X"].join("\t")
-    ];
+    const lines = [["Sample", "Response (Y)", "Predicted X"].join("\t")];
     for (const row of tbody.rows) {
-        const sample = row.querySelector(".cell-sample")?.textContent.trim();
-        const y = row.querySelector(".cell-predict-y")?.textContent.trim();
+        const sample = row.querySelector(".cell-sample")?.value.trim();
+        const y = row.querySelector(".cell-predict-y")?.value.trim();
         const x = row.querySelector(".cell-predict-x")?.textContent.trim();
         if (!sample && !y) continue;
-        lines.push([
-            sample,
-            y,
-            x || ""
-        ].join("\t"));
+        lines.push([sample, y, x || ""].join("\t"));
     }
     const text = lines.join("\n");
     try {
@@ -955,159 +905,56 @@ async function copyPredictions() {
         console.error("Copy failed:", error);
     }
 }
+
 /* ============================================================
    MAIN CALCULATION
    ============================================================ */
+
 function calculate4PL() {
     clearError();
     try {
         const data = getInputData();
-        const model = document.getElementById("fitModel")?.value;
+        const model = document.getElementById("fitModel")?.value || "4pl_unconstrained";
         const weighting = document.getElementById("weighting")?.value || "none";
-        if (!model) {
-            throw new Error("Please select a fit model.");
-        }
-        if (
-            ["4pl_unconstrained", "4pl_constrained", "5pl", "michaelisMenten"]
-                .includes(model) &&
-            data.x.some(value => value <= 0)
-        ) {
-            throw new Error(
-                "This model requires all concentrations to be greater than zero."
-            );
-        }
+
         lastX = data.x;
         lastY = data.y;
-        lastResult = fitModel(
-            model,
-            lastX,
-            lastY,
-            weighting
-        );
-        displayResults(lastResult);
-    } catch (error) {
-        console.error(error);
-        showError(error.message);
+
+        const result = fitModel(model, data.x, data.y, weighting);
+        lastResult = result;
+        displayResults(result);
+    } catch (err) {
+        showError(err.message);
     }
 }
-/* ============================================================
-   CLEAR
-   ============================================================ */
-function clearCalculator() {
-    clearError();
-    const tbody = getInputBody();
-    if (tbody) {
-        tbody.innerHTML = "";
-        for (let i = 0; i < 8; i++) {
-            addInputRow();
-        }
-    }
-    const predictBody = document.querySelector("#predictTable tbody");
-    if (predictBody) {
-        predictBody.innerHTML = "";
-        for (let i = 0; i < 8; i++) {
-            addPredictionRow();
-        }
-    }
-    lastX = [];
-    lastY = [];
-    lastResult = null;
-    const results = document.getElementById("results");
-    if (results) {
-        results.classList.add("hidden");
-    }
-    updateInputCount();
-    updatePredictionCount();
-    updatePredictions(null);
-    if (fitChart) {
-        fitChart.destroy();
-        fitChart = null;
-    }
-}
-/* ============================================================
-   INITIALISE
-   ============================================================ */
-function initialise() {
-    /*
-       The original HTML contains a second table with duplicate
-       dataTable/dataTableBody IDs.
-       Remove that broken second table and create Predict cleanly.
-       The first table remains the real input table.
-    */
-    const tables = document.querySelectorAll(
-        ".spreadsheet-wrapper table.spreadsheet"
-    );
-    if (tables.length > 1) {
-        for (let i = 1; i < tables.length; i++) {
-            tables[i].remove();
-        }
-    }
-    const inputTable = document.querySelector(
-        ".spreadsheet-wrapper table.spreadsheet"
-    );
-    if (inputTable) {
-        inputTable.id = "dataTable";
-        const tbody = inputTable.querySelector("tbody");
-        if (tbody) {
-            tbody.id = "dataTableBody";
-        }
-    }
+
+// Global Event Handlers Initialization
+document.addEventListener("DOMContentLoaded", () => {
     initInputTable(8);
-    createPredictionTable();
     initPredictionTable(8);
-    const inputTableElement = document.getElementById("dataTable");
-    if (inputTableElement) {
-        inputTableElement.addEventListener("paste", handleInputPaste);
-        inputTableElement.addEventListener("input", () => {
+
+    const copyBtn = document.getElementById("copyPredictionButton");
+    if (copyBtn) copyBtn.addEventListener("click", copyPredictions);
+
+    const calcBtn = document.getElementById("calculateButton");
+    if (calcBtn) calcBtn.addEventListener("click", calculate4PL);
+
+    const dataTable = document.getElementById("dataTable");
+    if (dataTable) {
+        dataTable.addEventListener("paste", handleInputPaste);
+        dataTable.addEventListener("input", () => {
             updateInputCount();
             ensureInputRow();
         });
     }
-    const predictionTable = document.getElementById("predictTable");
-    if (predictionTable) {
-        predictionTable.addEventListener(
-            "paste",
-            handlePredictionPaste
-        );
-        predictionTable.addEventListener("input", () => {
-            ensurePredictionRow();
+
+    const predictTable = document.getElementById("predictTable");
+    if (predictTable) {
+        predictTable.addEventListener("paste", handlePredictionPaste);
+        predictTable.addEventListener("input", () => {
             updatePredictionCount();
+            ensurePredictionRow();
             updatePredictions();
         });
     }
-    document
-        .getElementById("calculateButton")
-        ?.addEventListener("click", calculate4PL);
-    document
-        .getElementById("clearButton")
-        ?.addEventListener("click", clearCalculator);
-    document
-        .getElementById("copyPredictionButton")
-        ?.addEventListener("click", copyPredictions);
-    document
-        .getElementById("fitModel")
-        ?.addEventListener("change", () => {
-            if (lastX.length >= 3) {
-                calculate4PL();
-            }
-        });
-    document
-        .getElementById("weighting")
-        ?.addEventListener("change", () => {
-            if (lastX.length >= 3) {
-                calculate4PL();
-            }
-        });
-}
-/* ============================================================
-   START
-   ============================================================ */
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initialise, {
-        once: true
-    });
-} else {
-    initialise();
-}
-/* Keep calculate4PL available to the page if needed. */
-window.calculate4PL = calculate4PL;
+});
