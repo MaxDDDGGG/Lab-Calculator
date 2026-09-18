@@ -22,14 +22,14 @@ export function displayResults(lastX, lastY, result) {
 
     const stats = calculateFitStats(lastX, lastY, result);
 
-    // 1. Populate Compact Parameters
+// 1. Populate Compact Parameters
     if (parameters) {
-        let paramHtml = `<div class="compact-param-list">`;
+        let paramHtml = `<div class="compact-param-list"><ul>`;
         for (const [key, value] of Object.entries(result.params)) {
             if (typeof value !== "number") continue;
-            paramHtml += `<span class="param-tag">${escapeHtml(key)}: ${formatNumber(value)}</span>`;
+            paramHtml += `<li><span><strong>${escapeHtml(key)}:</strong></span> ${formatNumber(value)}</li>`;
         }
-        paramHtml += `</div>`;
+        paramHtml += `</ul></div>`;
         parameters.innerHTML = paramHtml;
     }
 

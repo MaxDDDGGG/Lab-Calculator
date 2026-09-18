@@ -138,7 +138,7 @@ function fit4PL(x, y, weighting, constrained) {
             if (base <= 0) return null;
             return C * Math.pow(base, 1 / B);
         },
-        equation: `4PL model`
+        equation: "y = D + (A - D) / (1 + (x / C)^B)"
     };
 }
 
@@ -186,7 +186,7 @@ function fit5PL(x, y, weighting) {
             if (inner <= 0) return null;
             return C * Math.pow(inner, 1 / B);
         },
-        equation: "5PL model"
+        equation: "y = D + (A - D) / (1 + (x / C)^B)^G"
     };
 }
 
