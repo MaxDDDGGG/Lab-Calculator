@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lab Calculator</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="app.js" defer></script>
+    <title>Lab Calculator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="js/app.js"></script>
 </head>
 <body>
 <main class="container">
@@ -16,85 +16,91 @@
 
 <!-- =========================================================
     RESULTS
-    ========================================================= -->
-<section id="results" class="card hidden">
+    ======================================================== -->
+<section id="resultsCard" class="card hidden" style="margin-bottom: 20px;">
     <div class="result-header">
         <div>
-            <span class="eyebrow">
-                Analysis Complete
-            </span>
+            <span class="eyebrow">Analysis Complete</span>
             <h2>Results</h2>
         </div>
-        <span id="pointCount" class="point-count">
-            0 Points Fitted
-        </span>
+        <span id="pointCount" class="point-count">0 Points Fitted</span>
     </div>
-    <div id="parameters"></div>
-    <div class="chart-container">
+
+    <!-- Chart Section (inside Results or standalone if preferred) -->
+    <div class="chart-container" style="margin-top: 20px;">
         <canvas id="fitChart"></canvas>
     </div>
 </section>
 
+<!-- =========================================================
+    CURVE DETAILS
+    ======================================================== -->
+<section id="statisticsCard" class="card hidden">
+    <div class="result-header">
+        <div>
+            <span class="eyebrow">Model Evaluation</span>
+            <h2>Curve Details & Statistics</h2>
+        </div>
+    </div>
 
+    <div class="statistics-grid">
+        <!-- Fitted Parameters Block -->
+        <div class="detail-group">
+            <div class="group-label">
+                <span>Fitted Parameters</span>
+                <button id="copyParametersButton" class="btn-copy-mini" type="button">Copy</button>
+            </div>
+            <div id="parameters" class="stat-box"></div>
+        </div>
+
+        <!-- Model Equation Block -->
+        <div class="detail-group">
+            <div class="group-label">
+                <span>Model Equation</span>
+                <button id="copyEquationButton" class="btn-copy-mini" type="button">Copy</button>
+            </div>
+            <div id="equationDisplay" class="stat-box equation-text"></div>
+        </div>
+
+        <!-- Goodness of Fit Block -->
+        <div class="detail-group">
+            <div class="group-label">
+                <span>Goodness of Fit</span>
+                <button id="copyStatsButton" class="btn-copy-mini" type="button">Copy</button>
+            </div>
+            <div id="fitStatsGrid" class="stat-box parameter-grid"></div>
+        </div>
+    </div>
+</section>
 <!-- =========================================================
     FIT OPTIONS
-    ========================================================= -->
+    ======================================================== -->
 <section class="card">
     <h2>Fit Options</h2>
     <div class="fit-options-row">
         <label for="fitModel">
             Fit Model:
-            <select id="fitModel">
-                <option value="4pl_unconstrained">
-                    4PL (Unconstrained)
-                </option>
-                <option value="4pl_constrained">
-                    4PL (Constrained)
-                </option>
-                <option value="5pl">
-                    5PL
-                </option>
-                <option value="linear">
-                    Linear
-                </option>
-                <option value="quadratic">
-                    Quadratic
-                </option>
-                <option value="cubic">
-                    Cubic
-                </option>
-                <option value="michaelisMenten">
-                    Michaelis-Menten
-                </option>
-                <option value="expGrowth">
-                    Exponential Growth
-                </option>
-                <option value="expDecay">
-                    Exponential Decay
-                </option>
-                <option value="gaussian">
-                    Gaussian
-                </option>
+            <select id="fitModel" name="fitModel">
+                <option value="4pl_unconstrained">4PL (Unconstrained)</option>
+                <option value="4pl_constrained">4PL (Constrained)</option>
+                <option value="5pl">5PL</option>
+                <option value="linear">Linear</option>
+                <option value="quadratic">Quadratic</option>
+                <option value="cubic">Cubic</option>
+                <option value="michaelisMenten">Michaelis-Menten</option>
+                <option value="expGrowth">Exponential Growth</option>
+                <option value="expDecay">Exponential Decay</option>
+                <option value="gaussian">Gaussian</option>
             </select>
         </label>
         <label for="weighting">
             Weighting:
-            <select id="weighting">
-                <option value="none" selected>
-                    None (w = 1)
-                </option>
-                <option value="invY">
-                    1 / Y
-                </option>
-                <option value="invY2">
-                    1 / Y²
-                </option>
-                <option value="invX">
-                    1 / X
-                </option>
-                <option value="invX2">
-                    1 / X²
-                </option>
+            <select id="weighting" name="weighting">
+                <option value="none" selected>None (w = 1)</option>
+                <option value="invY">1 / Y</option>
+                <option value="invY2">1 / Y²</option>
+                <option value="invX">1 / X</option>
+                <option value="invX2">1 / X²</option>
             </select>
         </label>
     </div>
@@ -106,7 +112,7 @@
 
 <!-- =========================================================
     STANDARD CURVE DATA
-    ========================================================= -->
+    ======================================================== -->
 <section class="card">
     <div class="section-header">
         <div>
@@ -116,63 +122,63 @@
             </p>
         </div>
     </div>
-<!-- Input Data & Prediction Section -->
-<div class="tables-container">
-    
-    <!-- Left Column: Data Input Section -->
-    <div class="spreadsheet-wrapper">
-        <div class="section-header">
-            <div>
-                <h2>Data Input</h2>
-                <p class="section-description">Enter standard concentrations (X) and responses (Y).</p>
-            </div>
-            <div id="dataCount" class="count-badge">0 data points</div>
-        </div>
 
-        <div id="inputError" class="error-message hidden"></div>
-
-        <table id="dataTable" class="spreadsheet">
-            <thead>
-                <tr>
-                    <th class="corner-cell"></th>
-                    <th class="column-letter">Concentration (X)</th>
-                    <th class="column-letter">Response (Y)</th>
-                </tr>
-            </thead>
-            <tbody id="dataTableBody">
-                <!-- JavaScript dynamically seeds initial input rows here -->
-            </tbody>
-        </table>
-
-    </div>
-
-    <!-- Right Column: Prediction Section -->
-    <div class="spreadsheet-wrapper">
-        <div class="section-header">
-            <div>
-                <h2>Predict</h2>
-                <p class="section-description">Fit a model to enable predictions.</p>
-            </div>
-            <div id="predictCount" class="count-badge">0 samples</div>
-            <button id="copyPredictionButton" class="btn-copy-mini">Copy</button>
-        </div>
-
-        <table id="predictTable" class="spreadsheet">
-            <thead>
-                <tr>
-                    <th class="corner-cell"></th>
-                    <th class="column-letter">Sample</th>
-                    <th class="column-letter">Predicted X</th>
-                </tr>
-            </thead>
-            <tbody id="predictTableBody">
-                <!-- JavaScript dynamically seeds prediction rows here -->
-            </tbody>
-        </table>
+    <!-- Input Data & Prediction Section -->
+    <div class="tables-container">
         
-        <div id="predictError" class="input-error hidden"></div>
+        <!-- Left Column: Data Input Section -->
+        <div class="spreadsheet-wrapper">
+            <div class="section-header">
+                <div>
+                    <h2>Data Input</h2>
+                    <p class="section-description">Enter standard concentrations (X) and responses (Y).</p>
+                </div>
+                <div id="dataCount" class="count-badge">0 data points</div>
+            </div>
+
+            <div id="inputError" class="error-message hidden"></div>
+
+            <table id="dataTable" class="spreadsheet">
+                <thead>
+                    <tr>
+                        <th class="corner-cell"></th>
+                        <th class="column-letter">Concentration (X)</th>
+                        <th class="column-letter">Response (Y)</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody">
+                    <!-- JavaScript dynamically seeds initial input rows here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Right Column: Prediction Section -->
+        <div class="spreadsheet-wrapper">
+            <div class="section-header">
+                <div>
+                    <h2>Predict</h2>
+                    <p class="section-description">Fit a model to enable predictions.</p>
+                </div>
+                <div id="predictCount" class="count-badge">0 samples</div>
+                <button id="copyPredictionButton" class="btn-copy-mini" type="button">Copy</button>
+            </div>
+
+            <table id="predictTable" class="spreadsheet">
+                <thead>
+                    <tr>
+                        <th class="corner-cell"></th>
+                        <th class="column-letter">Sample</th>
+                        <th class="column-letter">Predicted X</th>
+                    </tr>
+                </thead>
+                <tbody id="predictTableBody">
+                    <!-- JavaScript dynamically seeds prediction rows here -->
+                </tbody>
+            </table>
+            
+            <div id="predictError" class="input-error hidden"></div>
+        </div>
     </div>
-</div>
 </section>
 
 </main>
