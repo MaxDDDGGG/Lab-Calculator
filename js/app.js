@@ -120,4 +120,3 @@ document.addEventListener("DOMContentLoaded", () => {
             updatePredictions(lastResult);
         });
     }
-});
