@@ -1,0 +1,23 @@
+SAAS TIERED MONETIZATION & GATING TO-DO LIST
+
+Phase 1: Core State & Permissions Framework
+[ ] Define Global User State: Set up a lightweight user state object in app.js to track tiers ("guest", "registered", "paid").
+[ ] Create Access Control Helper: Write a centralized checkAccess(requiredTier) function to evaluate if a user can perform an action or needs a prompt.
+
+Phase 2: Table Row Limits (Data Gating)
+[ ] Enforce Input Table Limits: Restrict data rows to 8 for Guests, 16 for Registered users, and Unlimited for Paid users.
+[ ] Enforce Prediction Table Limits: Set corresponding row limits for the sample prediction table.
+[ ] Add Row-Limit Triggers: Prevent the calculator from adding new input rows once the tier threshold is reached.
+
+Phase 3: Model Gating ("Find Best Fit" & "Custom Model")
+[ ] Update Model Dropdown UI: Add visual lock icons (🔒) next to restricted models for guests and free registered users.
+[ ] Enforce Model Restrictions: Prevent guests and registered users from selecting "best_fit" or "custom", automatically redirecting them to standard models or triggering an upgrade prompt.
+
+Phase 4: Copy & Export Permissions
+[ ] Gate Copy Actions: Restrict copying equations, parameters, statistics, and predictions to Registered and Paid users (Guests are blocked with a signup prompt).
+[ ] Gate Export Actions: Restrict data/report exports exclusively to Paid users.
+[ ] Build Upgrade/Signup Modals: Replace standard browser alerts with a clean, friendly modal popup that invites users to log in or upgrade when they hit a locked feature.
+
+Phase 5: Backend, Auth & Payments (Future Integration)
+[ ] Integrate Authentication: Set up Supabase or Firebase Auth for secure email/password login and registration.
+[ ] Integrate Stripe Checkout: Create a Pro subscription product in Stripe and link it to user accounts via webhooks to automatically upgrade user tiers upon successful payment.
